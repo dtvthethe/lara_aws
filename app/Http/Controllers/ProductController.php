@@ -48,16 +48,15 @@ class ProductController extends Controller
         $input = $request->all();
 
         if ($image = $request->file('image')) {
-            $profileImage = date('YmdHis') . "." . $image->getClientOriginalExtension();
-            $input['image'] = $profileImage;
-
-
-            $path = Storage::disk('s3')->put('images/originals', $request->file, 'public');
-            $request->merge([
-                'size' => $request->file->getClientSize(),
-                'path' => $path
+            $request->validate([
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             ]);
-            $this->image->create($request->only('path', 'title', 'size'));
+        
+            $imageName = time().'.'.$request->image->extension();  
+         
+            $path = Storage::disk('s3')->put('images', $request->image);
+            $path = Storage::disk('s3')->url($path);
+            $input['image'] = $path;
         }
   
         Product::create($input);
