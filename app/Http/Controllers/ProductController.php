@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -47,10 +48,16 @@ class ProductController extends Controller
         $input = $request->all();
 
         if ($image = $request->file('image')) {
-            $destinationPath = 'image/';
             $profileImage = date('YmdHis') . "." . $image->getClientOriginalExtension();
-            $image->move($destinationPath, $profileImage);
-            $input['image'] = "$profileImage";
+            $input['image'] = $profileImage;
+
+
+            $path = Storage::disk('s3')->put('images/originals', $request->file, 'public');
+            $request->merge([
+                'size' => $request->file->getClientSize(),
+                'path' => $path
+            ]);
+            $this->image->create($request->only('path', 'title', 'size'));
         }
   
         Product::create($input);
