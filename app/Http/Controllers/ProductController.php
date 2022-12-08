@@ -16,7 +16,7 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::latest()->paginate(5);
-  
+
         return view('products.index',compact('products'))
             ->with('i', (request()->input('page', 1) - 1) * 5);
     }
@@ -47,15 +47,13 @@ class ProductController extends Controller
 
         $input = $request->all();
 
-        if ($image = $request->file('image')) {
+        if ($request->file('image')) {
             $request->validate([
                 'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             ]);
-        
-            $imageName = time().'.'.$request->image->extension();  
-         
             $path = Storage::disk('s3')->put('images', $request->image);
             $path = Storage::disk('s3')->url($path);
+            $path = ltrim($path, '/');
             $input['image'] = $path;
         }
   
@@ -103,11 +101,14 @@ class ProductController extends Controller
 
         $input = $request->all();
 
-        if ($image = $request->file('image')) {
-            $destinationPath = 'image/';
-            $profileImage = date('YmdHis') . "." . $image->getClientOriginalExtension();
-            $image->move($destinationPath, $profileImage);
-            $input['image'] = "$profileImage";
+        if ($request->file('image')) {
+            $request->validate([
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            ]);
+            $path = Storage::disk('s3')->put('images', $request->image);
+            $path = Storage::disk('s3')->url($path);
+            $path = ltrim($path, '/');
+            $input['image'] = $path;
         }else{
             unset($input['image']);
         }
@@ -126,6 +127,10 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        if ($product->image) {
+            Storage::disk('s3')->delete($product->image);
+        }
+
         $product->delete();
   
         return redirect()->route('products.index')
