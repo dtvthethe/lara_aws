@@ -30,7 +30,7 @@
         <tr>
             <td>{{ ++$i }}</td>
             <td>
-                <img src="{{ $product->imgPath() }}" width="100px">
+                <img src="{{ $product->image }}" width="100px">
             </td>
             <td>{{ $product->name }}</td>
             <td>{{ $product->detail }}</td>

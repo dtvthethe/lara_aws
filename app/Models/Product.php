@@ -13,14 +13,4 @@ class Product extends Model
     protected $fillable = [
         'name', 'detail', 'image'
     ];
-
-    /**
-     * Get img path.
-     *
-     * @return string
-     */
-    public function imgPath()
-    {
-        return FileUtility::getObjectURLFromS3($this->image);
-    }
 }
